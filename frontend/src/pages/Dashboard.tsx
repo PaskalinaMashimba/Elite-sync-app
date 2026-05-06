@@ -1,5 +1,6 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 import { useEffect, useState } from 'react'
+
+const API = 'https://elitesync-backend.onrender.com/api'
 
 export default function Dashboard({ user, token, onLogout, onBook }: any) {
   const [bookings, setBookings] = useState([])
@@ -7,10 +8,10 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
 
   useEffect(() => {
     fetch(`${API}/bookings/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setBookings).catch(() => {})
+      .then(r => r.json()).then(data => { if (Array.isArray(data)) setBookings(data) }).catch(() => {})
     fetch(`${API}/services`)
-      .then(r => r.json()).then(setServices).catch(() => {})
-  }, [])
+      .then(r => r.json()).then(data => { if (Array.isArray(data)) setServices(data) }).catch(() => {})
+  }, [token])
 
   const statusColor: any = {
     PENDING: 'bg-yellow-100 text-yellow-700',
@@ -20,9 +21,8 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-52 bg-[#0f172a] flex flex-col py-6 px-4">
-        <div className="bg-[#1e3a5f] rounded-lg px-3 py-2 mb-8">
+      <div className="w-52 bg-blue-950 flex flex-col py-6 px-4">
+        <div className="bg-blue-900 rounded-lg px-3 py-2 mb-8">
           <span className="text-white font-bold text-lg">EliteSync</span>
         </div>
         {['Dashboard', 'Bookings', 'Services'].map((item, i) => (
@@ -36,8 +36,6 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
           </button>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -48,8 +46,6 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
             + New Booking
           </button>
         </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label: 'My Bookings', value: bookings.length, color: 'text-blue-600' },
@@ -62,8 +58,6 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
             </div>
           ))}
         </div>
-
-        {/* Bookings Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800">My Bookings</h2>
@@ -77,7 +71,7 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  {['Service', 'Business', 'Date', 'Time', 'Status'].map(h => (
+                  {['Service', 'Date', 'Time', 'Status'].map(h => (
                     <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">{h}</th>
                   ))}
                 </tr>
@@ -86,9 +80,8 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
                 {bookings.map((b: any) => (
                   <tr key={b.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-800">{b.service?.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{b.service?.business?.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{new Date(b.bookingDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{new Date(b.startTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColor[b.status]}`}>{b.status}</span>
                     </td>
@@ -98,8 +91,6 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
             </table>
           )}
         </div>
-
-        {/* Services Grid */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="font-semibold text-gray-800 mb-4">Available Services</h2>
           {services.length === 0 ? (

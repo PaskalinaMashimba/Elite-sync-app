@@ -7,7 +7,7 @@ import BookingPage from './pages/BookingPage'
 export default function App() {
   const [page, setPage] = useState('login')
   const [user, setUser] = useState<any>(null)
-  const [token, setToken] = useState<string>('')
+  const [token, setToken] = useState('')
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token')
