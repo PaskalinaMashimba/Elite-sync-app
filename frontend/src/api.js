@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const API = axios.create({
-  // This line picks up the link you saved in the Vercel Dashboard
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  // This uses the Vercel Environment Variable we set up earlier
+  baseURL: import.meta.env.VITE_API_URL || 'https://elitesync-backend.onrender.com/api',
 });
 
-// This helps send the token if you have one later
+// Automatically sends your login token if you have one
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem('token');
   if (token) {
