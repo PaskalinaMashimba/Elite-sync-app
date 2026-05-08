@@ -32,15 +32,22 @@ model User {
 }
 
 model Business {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  category    String
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  ownerId     String     @unique
-  owner       User       @relation(fields: [ownerId], references: [id])
-  services    Service[]
+  id            String         @id @default(uuid())
+  name          String
+  description   String?
+  category      String
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  ownerId       String         @unique
+  owner         User           @relation(fields: [ownerId], references: [id])
+  services      Service[]
+  website       String?
+  phone         String?
+  email         String?
+  address       String?
+  imageUrl      String?
+  availability  Availability[]
+  blockedDates  BlockedDate[]
 }
 
 model Service {
@@ -53,6 +60,8 @@ model Service {
   businessId  String
   business    Business   @relation(fields: [businessId], references: [id])
   bookings    Booking[]
+  imageUrl    String?
+  staffName   String?
 }
 
 model Booking {
@@ -67,4 +76,27 @@ model Booking {
   user        User          @relation(fields: [userId], references: [id])
   serviceId   String
   service     Service       @relation(fields: [serviceId], references: [id])
+  paymentStatus String      @default("unpaid")
+  paymentAmount Float?
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  isOpen      Boolean  @default(true)
+
+  @@unique([businessId, dayOfWeek])
+}
+
+model BlockedDate {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  date       DateTime
+  reason     String?
+  createdAt  DateTime @default(now())
 }

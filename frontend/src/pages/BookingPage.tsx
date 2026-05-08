@@ -81,21 +81,49 @@ export default function BookingPage({ token, onBack }: any) {
           <h1 className="text-2xl font-bold text-gray-800">Book a Session</h1>
         </div>
         {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 mb-6 text-sm">{error}</div>}
+        
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="font-semibold text-gray-800 mb-4">1. Select a Service</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {services.map((s: any) => (
               <div key={s.id} onClick={() => setSelectedService(s)}
-                className={`border-2 rounded-xl p-4 cursor-pointer transition ${selectedService?.id === s.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                <h3 className="font-semibold text-gray-800 text-sm">{s.name}</h3>
-                <p className="text-gray-500 text-xs mt-1">{s.business?.name}</p>
-                <p className="text-blue-600 font-bold text-sm mt-2">{s.price} PLN</p>
-                <p className="text-gray-400 text-xs">{s.durationMin} min</p>
+                className={`border-2 rounded-xl overflow-hidden cursor-pointer transition ${selectedService?.id === s.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                {s.imageUrl && <img src={s.imageUrl} className="w-full h-24 object-cover" alt={s.name} />}
+                <div className="p-3">
+                  <h3 className="font-semibold text-gray-800 text-sm">{s.name}</h3>
+                  {s.staffName && <p className="text-blue-500 text-xs">👤 {s.staffName}</p>}
+                  <p className="text-gray-500 text-xs mt-1">{s.business?.name}</p>
+                  {s.description && <p className="text-gray-400 text-xs mt-1 line-clamp-2">{s.description}</p>}
+                  
+                  <div className="flex justify-between mt-2">
+                    <span className="text-blue-600 font-bold text-sm">{s.price} PLN</span>
+                    <span className="text-gray-400 text-xs">{s.durationMin} min</span>
+                  </div>
+
+                  {/* Business contact links */}
+                  {s.business && (
+                    <div className="flex gap-2 mt-2 flex-wrap border-t pt-2 border-gray-50">
+                      {s.business.phone && (
+                        <a href={`tel:${s.business.phone}`} onClick={e => e.stopPropagation()} className="text-green-600 text-xs hover:underline">📞 Call</a>
+                      )}
+                      {s.business.email && (
+                        <a href={`mailto:${s.business.email}`} onClick={e => e.stopPropagation()} className="text-blue-600 text-xs hover:underline">✉️ Email</a>
+                      )}
+                      {s.business.website && (
+                        <a href={s.business.website} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-purple-600 text-xs hover:underline">🔗 Web</a>
+                      )}
+                      {s.business.address && (
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.business.address)}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-red-500 text-xs hover:underline">📍 Map</a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
           {services.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No services available yet.</p>}
         </div>
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="font-semibold text-gray-800 mb-4">2. Pick a Date</h2>
           <input type="date" value={selectedDate}
@@ -103,6 +131,7 @@ export default function BookingPage({ token, onBack }: any) {
             min={new Date().toISOString().split('T')[0]}
             className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
+
         {selectedDate && selectedService && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
             <h2 className="font-semibold text-gray-800 mb-4">3. Choose a Time Slot</h2>
@@ -118,12 +147,14 @@ export default function BookingPage({ token, onBack }: any) {
             </div>
           </div>
         )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="font-semibold text-gray-800 mb-4">4. Notes (optional)</h2>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
             className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Any special requests..." />
         </div>
+
         <button onClick={handleConfirm} disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl text-lg transition disabled:opacity-50">
           {loading ? 'Confirming...' : 'Confirm Booking →'}

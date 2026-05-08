@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import Analytics from './Analytics'
+import CalendarControl from './CalendarControl'
+import Payments from './Payments'
 
 const API = 'https://elitesync-backend.onrender.com/api'
 
@@ -7,49 +10,30 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
   const [business, setBusiness] = useState<any>(null)
   const [services, setServices] = useState([])
   const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
 
-  // Business form
   const [bizForm, setBizForm] = useState({ name: '', description: '', category: '' })
-  // Service form
   const [svcForm, setSvcForm] = useState({ name: '', description: '', durationMin: '', price: '' })
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   const loadData = async () => {
-    setLoading(true)
     try {
-      // Get my business
-      const r1 = await fetch(`${API}/businesses/mine`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const r1 = await fetch(`${API}/businesses/mine`, { headers: { Authorization: `Bearer ${token}` } })
       if (r1.ok) {
         const biz = await r1.json()
         setBusiness(biz)
         setBizForm({ name: biz.name, description: biz.description || '', category: biz.category })
-
-        // Get services for this business
-        const r2 = await fetch(`${API}/services?businessId=${biz.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const r2 = await fetch(`${API}/services?businessId=${biz.id}`, { headers: { Authorization: `Bearer ${token}` } })
         if (r2.ok) setServices(await r2.json())
-
-        // Get bookings for this business
-        const r3 = await fetch(`${API}/bookings/business`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const r3 = await fetch(`${API}/bookings/business`, { headers: { Authorization: `Bearer ${token}` } })
         if (r3.ok) setBookings(await r3.json())
       }
     } catch (e) {}
-    setLoading(false)
   }
 
   const createBusiness = async (e: any) => {
-    e.preventDefault()
-    setMsg('')
+    e.preventDefault(); setMsg('')
     try {
       const res = await fetch(`${API}/businesses`, {
         method: 'POST',
@@ -58,14 +42,12 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setBusiness(data)
-      setMsg('Business profile created!')
+      setBusiness(data); setMsg('Business profile created! ✓')
     } catch (err: any) { setMsg(err.message) }
   }
 
   const updateBusiness = async (e: any) => {
-    e.preventDefault()
-    setMsg('')
+    e.preventDefault(); setMsg('')
     try {
       const res = await fetch(`${API}/businesses/${business.id}`, {
         method: 'PUT',
@@ -74,14 +56,12 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setBusiness(data)
-      setMsg('Profile updated!')
+      setBusiness(data); setMsg('Profile updated! ✓')
     } catch (err: any) { setMsg(err.message) }
   }
 
   const addService = async (e: any) => {
-    e.preventDefault()
-    setMsg('')
+    e.preventDefault(); setMsg('')
     try {
       const res = await fetch(`${API}/services`, {
         method: 'POST',
@@ -97,31 +77,22 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
       if (!res.ok) throw new Error(data.error)
       setServices((prev: any) => [...prev, data])
       setSvcForm({ name: '', description: '', durationMin: '', price: '' })
-      setMsg('Service added!')
+      setMsg('Service added! ✓')
     } catch (err: any) { setMsg(err.message) }
   }
 
   const deleteService = async (id: string) => {
-    try {
-      await fetch(`${API}/services/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setServices((prev: any) => prev.filter((s: any) => s.id !== id))
-    } catch (e) {}
+    await fetch(`${API}/services/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+    setServices((prev: any) => prev.filter((s: any) => s.id !== id))
   }
 
   const updateBookingStatus = async (id: string, status: string) => {
-    try {
-      const res = await fetch(`${API}/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status })
-      })
-      if (res.ok) {
-        setBookings((prev: any) => prev.map((b: any) => b.id === id ? { ...b, status } : b))
-      }
-    } catch (e) {}
+    const res = await fetch(`${API}/bookings/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status })
+    })
+    if (res.ok) setBookings((prev: any) => prev.map((b: any) => b.id === id ? { ...b, status } : b))
   }
 
   const statusColor: any = {
@@ -130,24 +101,32 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
     CANCELLED: 'bg-red-100 text-red-700'
   }
 
-  const tabs = ['overview', 'profile', 'services', 'bookings']
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className="w-56 bg-blue-950 flex flex-col py-6 px-4">
-        <div className="bg-blue-900 rounded-lg px-3 py-2 mb-2">
+        <div className="bg-blue-900 rounded-lg px-3 py-2 mb-1">
           <span className="text-white font-bold text-lg">EliteSync</span>
         </div>
         <p className="text-blue-400 text-xs px-1 mb-6">Business Portal</p>
-        {tabs.map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-2 rounded-lg mb-1 text-sm text-left capitalize transition ${tab === t ? 'bg-blue-600 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}>
-            {t === 'overview' ? '📊 Overview' : t === 'profile' ? '🏢 My Business' : t === 'services' ? '⚙️ Services' : '📅 Bookings'}
+
+        {[
+          { key: 'overview',  label: '📊 Overview' },
+          { key: 'profile',   label: '🏢 My Business' },
+          { key: 'services',  label: '⚙️ Services' },
+          { key: 'bookings',  label: '📅 Bookings' },
+          { key: 'analytics', label: '📈 Analytics' },
+          { key: 'calendar',  label: '🗓️ Calendar' },
+          { key: 'payments',  label: '💰 Payments' },
+        ].map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`px-3 py-2 rounded-lg mb-1 text-sm text-left transition ${tab === t.key ? 'bg-blue-600 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}>
+            {t.label}
           </button>
         ))}
+
         <div className="mt-auto">
-          <p className="text-gray-500 text-xs px-1 mb-2">{user?.fullName}</p>
+          <p className="text-gray-500 text-xs px-1 mb-2 truncate">{user?.fullName}</p>
           <button onClick={onLogout} className="w-full text-left px-3 py-2 text-red-400 text-sm hover:text-red-300">Sign Out</button>
         </div>
       </div>
@@ -155,7 +134,7 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
       {/* Content */}
       <div className="flex-1 p-8 overflow-y-auto">
         {msg && (
-          <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${msg.includes('!') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${msg.includes('✓') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {msg}
           </div>
         )}
@@ -188,8 +167,6 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                     </div>
                   ))}
                 </div>
-
-                {/* Recent pending bookings */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <h2 className="font-semibold text-gray-800 mb-4">Pending Bookings — Action Required</h2>
                   {bookings.filter((b: any) => b.status === 'PENDING').length === 0 ? (
@@ -203,10 +180,8 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                             <p className="text-gray-500 text-xs">{b.service?.name} — {new Date(b.bookingDate).toLocaleDateString()}</p>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => updateBookingStatus(b.id, 'APPROVED')}
-                              className="bg-green-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-green-700">Approve</button>
-                            <button onClick={() => updateBookingStatus(b.id, 'CANCELLED')}
-                              className="bg-red-500 text-white text-xs px-3 py-1 rounded-lg hover:bg-red-600">Decline</button>
+                            <button onClick={() => updateBookingStatus(b.id, 'APPROVED')} className="bg-green-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-green-700">Approve</button>
+                            <button onClick={() => updateBookingStatus(b.id, 'CANCELLED')} className="bg-red-500 text-white text-xs px-3 py-1 rounded-lg hover:bg-red-600">Decline</button>
                           </div>
                         </div>
                       ))}
@@ -218,7 +193,7 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
           </div>
         )}
 
-        {/* BUSINESS PROFILE */}
+        {/* PROFILE */}
         {tab === 'profile' && (
           <div>
             <h1 className="text-2xl font-bold text-gray-800 mb-6">{business ? 'Edit Business Profile' : 'Create Business Profile'}</h1>
@@ -235,13 +210,9 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                   <select value={bizForm.category} onChange={e => setBizForm({ ...bizForm, category: e.target.value })} required
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Select a category</option>
-                    <option value="Fitness & Sports">Fitness & Sports</option>
-                    <option value="Beauty & Wellness">Beauty & Wellness</option>
-                    <option value="Education & Tutoring">Education & Tutoring</option>
-                    <option value="Modeling & Creative">Modeling & Creative</option>
-                    <option value="Health & Medical">Health & Medical</option>
-                    <option value="Consulting & Business">Consulting & Business</option>
-                    <option value="Other">Other</option>
+                    {['Fitness & Sports','Beauty & Wellness','Education & Tutoring','Modeling & Creative','Health & Medical','Consulting & Business','Other'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -264,12 +235,11 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Manage Services</h1>
             {!business ? (
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-700">
-                You need to create a business profile first before adding services.
+                Create a business profile first.
                 <button onClick={() => setTab('profile')} className="ml-2 underline font-semibold">Create profile →</button>
               </div>
             ) : (
               <>
-                {/* Add service form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 max-w-xl">
                   <h2 className="font-semibold text-gray-800 mb-4">Add New Service</h2>
                   <form onSubmit={addService} className="space-y-3">
@@ -280,23 +250,21 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Short description (optional)" />
                     <div className="grid grid-cols-2 gap-3">
-                      <input type="number" value={svcForm.durationMin} onChange={e => setSvcForm({ ...svcForm, durationMin: e.target.value })} required
+                      <input type="number" value={svcForm.durationMin} onChange={e => setSvcForm({ ...svcForm, durationMin: e.target.value })} required min="1"
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Duration (minutes)" min="1" />
-                      <input type="number" value={svcForm.price} onChange={e => setSvcForm({ ...svcForm, price: e.target.value })} required
+                        placeholder="Duration (minutes)" />
+                      <input type="number" value={svcForm.price} onChange={e => setSvcForm({ ...svcForm, price: e.target.value })} required min="0" step="0.01"
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Price (PLN)" min="0" step="0.01" />
+                        placeholder="Price (PLN)" />
                     </div>
                     <button type="submit" className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700">
                       + Add Service
                     </button>
                   </form>
                 </div>
-
-                {/* Services list */}
                 <div className="grid grid-cols-2 gap-4">
                   {services.length === 0 ? (
-                    <p className="text-gray-400 text-sm col-span-2 text-center py-8">No services yet. Add your first one above.</p>
+                    <p className="text-gray-400 text-sm col-span-2 text-center py-8">No services yet.</p>
                   ) : services.map((s: any) => (
                     <div key={s.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                       <div className="flex justify-between items-start">
@@ -308,10 +276,7 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                             <span className="text-gray-400 text-xs bg-gray-100 px-2 py-0.5 rounded">{s.durationMin} min</span>
                           </div>
                         </div>
-                        <button onClick={() => deleteService(s.id)}
-                          className="text-red-400 hover:text-red-600 text-xs px-2 py-1 border border-red-200 rounded hover:bg-red-50">
-                          Remove
-                        </button>
+                        <button onClick={() => deleteService(s.id)} className="text-red-400 hover:text-red-600 text-xs px-2 py-1 border border-red-200 rounded hover:bg-red-50">Remove</button>
                       </div>
                     </div>
                   ))}
@@ -329,7 +294,7 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
               {bookings.length === 0 ? (
                 <div className="px-6 py-12 text-center text-gray-400">
                   <p className="text-4xl mb-3">📅</p>
-                  <p>No bookings yet. Once clients book your services they will appear here.</p>
+                  <p>No bookings yet.</p>
                 </div>
               ) : (
                 <table className="w-full">
@@ -353,10 +318,8 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
                         <td className="px-4 py-3">
                           {b.status === 'PENDING' && (
                             <div className="flex gap-1">
-                              <button onClick={() => updateBookingStatus(b.id, 'APPROVED')}
-                                className="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">✓</button>
-                              <button onClick={() => updateBookingStatus(b.id, 'CANCELLED')}
-                                className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600">✗</button>
+                              <button onClick={() => updateBookingStatus(b.id, 'APPROVED')} className="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">✓</button>
+                              <button onClick={() => updateBookingStatus(b.id, 'CANCELLED')} className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600">✗</button>
                             </div>
                           )}
                         </td>
@@ -368,6 +331,11 @@ export default function BusinessDashboard({ user, token, onLogout }: any) {
             </div>
           </div>
         )}
+
+        {/* NEW TABS */}
+        {tab === 'analytics' && <Analytics token={token} onBack={() => setTab('overview')} />}
+        {tab === 'calendar' && <CalendarControl token={token} businessId={business?.id} onBack={() => setTab('overview')} />}
+        {tab === 'payments' && <Payments token={token} onBack={() => setTab('overview')} />}
       </div>
     </div>
   )

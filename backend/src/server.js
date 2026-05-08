@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const authRoutes      = require('./routes/auth');
-const serviceRoutes   = require('./routes/services');
-const bookingRoutes   = require('./routes/bookings');
-const businessRoutes  = require('./routes/businesses');
+const authRoutes         = require('./routes/auth');
+const serviceRoutes      = require('./routes/services');
+const bookingRoutes      = require('./routes/bookings');
+const businessRoutes     = require('./routes/businesses');
+const analyticsRoutes    = require('./routes/analytics');
+const availabilityRoutes = require('./routes/availability');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,10 +18,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use('/api/auth',       authRoutes);
-app.use('/api/services',   serviceRoutes);
-app.use('/api/bookings',   bookingRoutes);
-app.use('/api/businesses', businessRoutes);
+app.use('/api/auth',         authRoutes);
+app.use('/api/services',     serviceRoutes);
+app.use('/api/bookings',     bookingRoutes);
+app.use('/api/businesses',   businessRoutes);
+app.use('/api/analytics',    analyticsRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
