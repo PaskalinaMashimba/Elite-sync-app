@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react'
 
 const API = 'https://elitesync-backend.onrender.com/api'
 
-export default function Dashboard({ user, token, onLogout, onBook }: any) {
+export default function Dashboard({ user, token, onLogout, onBook, onProfile }: any) {
   const [bookings, setBookings] = useState([])
   const [services, setServices] = useState([])
 
   useEffect(() => {
     fetch(`${API}/bookings/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(data => { if (Array.isArray(data)) setBookings(data) }).catch(() => {})
+      .then(r => r.json()).then(data => { if (Array.isArray(data)) setBookings(data) }).catch(() => { })
     fetch(`${API}/services`)
-      .then(r => r.json()).then(data => { if (Array.isArray(data)) setServices(data) }).catch(() => {})
+      .then(r => r.json()).then(data => { if (Array.isArray(data)) setServices(data) }).catch(() => { })
   }, [token])
 
   const statusColor: any = {
@@ -38,13 +38,27 @@ export default function Dashboard({ user, token, onLogout, onBook }: any) {
       </div>
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-500 text-sm">Welcome back, {user?.fullName}</p>
+          <div className="flex items-center gap-3">
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} className="w-10 h-10 rounded-full object-cover" alt="Profile" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
+                {user?.fullName?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+              <p className="text-gray-500 text-sm">Welcome back, {user?.fullName}</p>
+            </div>
           </div>
-          <button onClick={onBook} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
-            + New Booking
-          </button>
+          <div className="flex gap-2">
+            <button onClick={onProfile} className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200">
+              👤 My Profile
+            </button>
+            <button onClick={onBook} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
+              + New Booking
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
