@@ -57,17 +57,20 @@ model Business {
 }
 
 model Service {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  durationMin Int
-  price       Float
-  isActive    Boolean    @default(true)
-  businessId  String
-  business    Business   @relation(fields: [businessId], references: [id])
-  bookings    Booking[]
-  imageUrl    String?
-  staffName   String?
+  id             String     @id @default(uuid())
+  name           String
+  description    String?
+  durationMin    Int
+  price          Float
+  isActive       Boolean    @default(true)
+  businessId     String
+  business       Business   @relation(fields: [businessId], references: [id])
+  bookings       Booking[]
+  imageUrl       String?
+  staffName      String?
+  availableFrom  String?
+  availableTo    String?
+  availableDays  String?
 }
 
 model Booking {
