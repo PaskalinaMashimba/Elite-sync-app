@@ -50,7 +50,15 @@ export default function App() {
 
   if (page === 'login')    return <Login onLogin={handleLogin} onRegister={() => setPage('register')} />
   if (page === 'register') return <Register onLogin={handleLogin} onBack={() => setPage('login')} />
-  if (page === 'profile')  return <Profile user={user} token={token} onBack={() => setPage(user?.role === 'BUSINESS_OWNER' ? 'business' : 'dashboard')} onUpdate={handleProfileUpdate} />
+ if (page === 'profile') return (
+  <Profile
+    user={user}
+    token={token}
+    onBack={() => setPage(user?.role === 'BUSINESS_OWNER' ? 'business' : 'dashboard')}
+    onUpdate={handleProfileUpdate}
+    onLogout={handleLogout}
+  />
+)
   if (page === 'admin')    return <AdminDashboard user={user} token={token} onLogout={handleLogout} />
   if (page === 'business') return <BusinessDashboard user={user} token={token} onLogout={handleLogout} onProfile={() => setPage('profile')} />
   if (page === 'booking')  return <BookingPage token={token} user={user} onBack={() => setPage('dashboard')} preSelectedService={selectedService} />

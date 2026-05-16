@@ -16,7 +16,6 @@ router.get('/stats', protect, adminOnly, async (req, res) => {
     const approvedBookings = await prisma.booking.count({ where: { status: 'APPROVED' } });
     const pendingBookings  = await prisma.booking.count({ where: { status: 'PENDING' } });
 
-    // Monthly signups last 6 months
     const now = new Date();
     const monthlySignups = await Promise.all(
       Array.from({ length: 6 }, (_, i) => {
@@ -31,20 +30,17 @@ router.get('/stats', protect, adminOnly, async (req, res) => {
       })
     );
 
-    // All businesses with owner info
     const businesses = await prisma.business.findMany({
       include: {
         owner: { select: { fullName: true, email: true } },
-        services: true,
         _count: { select: { services: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    // Recent users
     const recentUsers = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 50,
       select: { id: true, fullName: true, email: true, role: true, createdAt: true, isActive: true }
     });
 
@@ -56,10 +52,12 @@ router.get('/stats', protect, adminOnly, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Toggle user active status
+// Toggle user active/inactive
 router.put('/users/:id/toggle', protect, adminOnly, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role === 'SUPER_ADMIN') return res.status(403).json({ error: 'Cannot modify another admin' });
     const updated = await prisma.user.update({
       where: { id: req.params.id },
       data: { isActive: !user.isActive }
@@ -68,13 +66,78 @@ router.put('/users/:id/toggle', protect, adminOnly, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// Toggle business active status
+// Permanently delete a user account
+router.delete('/users/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role === 'SUPER_ADMIN') return res.status(403).json({ error: 'Cannot delete an admin account' });
+
+    // Delete in correct order to avoid FK constraint errors
+    // First find bookings and delete them
+    await prisma.booking.deleteMany({ where: { userId: req.params.id } });
+
+    // If user is a business owner, delete their business and services
+    const business = await prisma.business.findUnique({ where: { ownerId: req.params.id } });
+    if (business) {
+      await prisma.booking.deleteMany({ where: { service: { businessId: business.id } } });
+      await prisma.service.deleteMany({ where: { businessId: business.id } });
+      await prisma.availability.deleteMany({ where: { businessId: business.id } });
+      await prisma.blockedDate.deleteMany({ where: { businessId: business.id } });
+      await prisma.business.delete({ where: { id: business.id } });
+    }
+
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.json({ message: 'User account permanently deleted' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Toggle business active/suspended
 router.put('/businesses/:id/toggle', protect, adminOnly, async (req, res) => {
   try {
     const biz = await prisma.business.findUnique({ where: { id: req.params.id } });
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
     const updated = await prisma.business.update({
       where: { id: req.params.id },
       data: { isActive: !biz.isActive }
+    });
+    res.json(updated);
+  } catch (e) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// Permanently delete a business
+router.delete('/businesses/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const biz = await prisma.business.findUnique({ where: { id: req.params.id } });
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+
+    // Delete in correct order
+    await prisma.booking.deleteMany({ where: { service: { businessId: req.params.id } } });
+    await prisma.service.deleteMany({ where: { businessId: req.params.id } });
+    await prisma.availability.deleteMany({ where: { businessId: req.params.id } });
+    await prisma.blockedDate.deleteMany({ where: { businessId: req.params.id } });
+    await prisma.business.delete({ where: { id: req.params.id } });
+
+    res.json({ message: 'Business permanently deleted' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Change a user's role
+router.put('/users/:id/role', protect, adminOnly, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['CLIENT', 'BUSINESS_OWNER'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    const updated = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { role }
     });
     res.json(updated);
   } catch (e) { res.status(500).json({ error: 'Server error' }); }
